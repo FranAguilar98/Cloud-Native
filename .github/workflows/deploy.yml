@@ -1,13 +1,10 @@
 name: CI/CD - Deploy to EC2
-
 on:
   push:
     branches: [ main ]
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
@@ -38,12 +35,17 @@ jobs:
             docker run -d \
               --name ms-guias-despacho \
               -p 8080:8080 \
-              -v /mnt/efs:/app/efs \
-              -e AZURE_TENANT_NAME=${{ secrets.AZURE_TENANT_NAME }} \
-              -e AZURE_USER_FLOW=${{ secrets.AZURE_USER_FLOW }} \
-              -e AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }} \
               -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
               -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+              -e AWS_SESSION_TOKEN=${{ secrets.AWS_SESSION_TOKEN }} \
               -e AWS_DEFAULT_REGION=us-east-1 \
               ${{ secrets.DOCKERHUB_USERNAME }}/ms-guias-despacho:latest
             echo "✅ Deploy completado"
+            
+            # ⚠️ DESCOMENTAR cuando Azure AD esté configurado:
+            # -e AZURE_TENANT_NAME=${{ secrets.AZURE_TENANT_NAME }} \
+            # -e AZURE_USER_FLOW=${{ secrets.AZURE_USER_FLOW }} \
+            # -e AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }} \
+            
+            # ⚠️ DESCOMENTAR cuando EFS esté montado:
+            # -v /mnt/efs:/app/efs \
