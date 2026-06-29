@@ -33,7 +33,7 @@ public class AwsS3Controller {
     private final GuiaPdfService guiaPdfService;
 
     @PostMapping("/{bucket}/generar")
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> generarYSubirGuia(
             @PathVariable String bucket,
             @Valid @RequestBody GuiaRequestDto request,
@@ -71,7 +71,7 @@ public class AwsS3Controller {
     }
 
     @PostMapping("/{bucket}/subir")
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> subirGuia(
             @PathVariable String bucket,
             @RequestParam String transportista,
@@ -101,7 +101,7 @@ public class AwsS3Controller {
     }
 
     @GetMapping("/{bucket}/object")
-    @PreAuthorize("hasAnyRole('DESCARGA', 'ADMIN')")
+    // @PreAuthorize("hasAnyRole('DESCARGA', 'ADMIN')")
     public ResponseEntity<byte[]> descargarGuia(
             @PathVariable String bucket,
             @RequestParam String key,
@@ -119,76 +119,11 @@ public class AwsS3Controller {
     }
 
     @PutMapping("/{bucket}/object")
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> modificarGuia(
             @PathVariable String bucket,
             @RequestParam String sourceKey,
             @RequestParam String destKey,
             @AuthenticationPrincipal Jwt jwt) {
 
-        log.info("Modificando guía de '{}' a '{}'", sourceKey, destKey);
-
-        awsS3Service.moveObject(bucket, sourceKey, destKey);
-
-        return ResponseEntity.ok(Map.of(
-            "mensaje", "Guía actualizada exitosamente",
-            "nuevaKey", destKey
-        ));
-    }
-
-    @DeleteMapping("/{bucket}/object")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> eliminarGuia(
-            @PathVariable String bucket,
-            @RequestParam String key,
-            @AuthenticationPrincipal Jwt jwt) {
-
-        log.info("Eliminando guía: {}", key);
-
-        awsS3Service.deleteObject(bucket, key);
-
-        return ResponseEntity.ok(Map.of("mensaje", "Guía eliminada exitosamente", "key", key));
-    }
-
-    @GetMapping("/{bucket}/filtrar")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<GuiaDto>> filtrarGuias(
-            @PathVariable String bucket,
-            @RequestParam String transportista,
-            @RequestParam String fecha,
-            @AuthenticationPrincipal Jwt jwt) {
-
-        log.info("Filtrando guías - transportista: {}, fecha: {}", transportista, fecha);
-
-        List<GuiaDto> guias = awsS3Service.listarGuiasPorTransportistaYFecha(bucket, transportista, fecha)
-                .stream()
-                .map(obj -> GuiaDto.builder()
-                        .s3Key(obj.getKey())
-                        .size(obj.getSize())
-                        .lastModified(obj.getLastModified())
-                        .transportista(transportista)
-                        .fecha(fecha)
-                        .numeroGuia(extraerNumeroGuia(obj.getKey()))
-                        .build())
-                .toList();
-
-        return ResponseEntity.ok(guias);
-    }
-
-    @GetMapping("/{bucket}/objects")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<S3ObjectDto>> listarObjetos(
-            @PathVariable String bucket,
-            @AuthenticationPrincipal Jwt jwt) {
-
-        log.info("Listando objetos del bucket: {}", bucket);
-        return ResponseEntity.ok(awsS3Service.listObjects(bucket));
-    }
-
-    private String extraerNumeroGuia(String key) {
-        if (key == null) return "";
-        String[] parts = key.split("/");
-        String nombre = parts[parts.length - 1];
-        return nombre.endsWith(".pdf") ? nombre.substring(0, nombre.length() - 4) : nombre;
-    }
-}
+        log.info("Modificando
