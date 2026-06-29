@@ -115,4 +115,29 @@ public class AwsS3Controller {
 
     @PutMapping("/{bucket}/object")
     // @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> modificarGuia
+    public ResponseEntity<Map<String, String>> modificarGuia(
+            @PathVariable String bucket,
+            @RequestParam String sourceKey,
+            @RequestParam String destKey,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        log.info("Modificando guía de '{}' a '{}'", sourceKey, destKey);
+
+        awsS3Service.moveObject(bucket, sourceKey, destKey);
+
+        return ResponseEntity.ok(Map.of(
+            "mensaje", "Guía actualizada exitosamente",
+            "nuevaKey", destKey
+        ));
+    }
+
+    @DeleteMapping("/{bucket}/object")
+    // @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> eliminarGuia(
+            @PathVariable String bucket,
+            @RequestParam String key,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        log.info("Eliminando guía: {}", key);
+
+        awsS3Service.deleteObject(bucket, key);
