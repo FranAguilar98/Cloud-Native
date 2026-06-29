@@ -33,7 +33,7 @@ public class AwsS3Controller {
     private final GuiaPdfService guiaPdfService;
 
     @PostMapping("/{bucket}/generar")
-    // @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> generarYSubirGuia(
             @PathVariable String bucket,
             @Valid @RequestBody GuiaRequestDto request,
@@ -71,7 +71,7 @@ public class AwsS3Controller {
     }
 
     @PostMapping("/{bucket}/subir")
-    // @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> subirGuia(
             @PathVariable String bucket,
             @RequestParam String transportista,
@@ -101,7 +101,7 @@ public class AwsS3Controller {
     }
 
     @GetMapping("/{bucket}/object")
-    // @PreAuthorize("hasAnyRole('DESCARGA', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('DESCARGA', 'ADMIN')")
     public ResponseEntity<byte[]> descargarGuia(
             @PathVariable String bucket,
             @RequestParam String key,
@@ -119,7 +119,7 @@ public class AwsS3Controller {
     }
 
     @PutMapping("/{bucket}/object")
-    // @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> modificarGuia(
             @PathVariable String bucket,
             @RequestParam String sourceKey,
@@ -137,7 +137,7 @@ public class AwsS3Controller {
     }
 
     @DeleteMapping("/{bucket}/object")
-    // @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> eliminarGuia(
             @PathVariable String bucket,
             @RequestParam String key,
@@ -151,7 +151,7 @@ public class AwsS3Controller {
     }
 
     @GetMapping("/{bucket}/filtrar")
-    // @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<GuiaDto>> filtrarGuias(
             @PathVariable String bucket,
             @RequestParam String transportista,
@@ -176,7 +176,7 @@ public class AwsS3Controller {
     }
 
     @GetMapping("/{bucket}/objects")
-    // @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<S3ObjectDto>> listarObjetos(
             @PathVariable String bucket,
             @AuthenticationPrincipal Jwt jwt) {
