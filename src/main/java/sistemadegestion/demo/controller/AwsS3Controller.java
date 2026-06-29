@@ -55,6 +55,9 @@ public class AwsS3Controller {
         String key = "pdf/" + request.getFecha() + "/" + request.getTransportista()
                 + "/" + request.getNumeroGuia() + ".pdf";
 
+        // ⚠️ EFS comentado temporalmente para pruebas sin EFS montado
+        // efsService.saveToEfs(key, pdfBytes);
+
         awsS3Service.uploadBytes(bucket, key, pdfBytes, "application/pdf");
 
         log.info("Guía N° {} generada y subida exitosamente. Key: {}", request.getNumeroGuia(), key);
@@ -82,6 +85,8 @@ public class AwsS3Controller {
         String key = "pdf/" + fecha + "/" + transportista + "/" + numeroGuia + ".pdf";
 
         try {
+            // ⚠️ EFS comentado temporalmente para pruebas sin EFS montado
+            // efsService.saveToEfs(key, file);
             awsS3Service.upload(bucket, key, file);
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
@@ -141,3 +146,49 @@ public class AwsS3Controller {
         log.info("Eliminando guía: {}", key);
 
         awsS3Service.deleteObject(bucket, key);
+
+        return ResponseEntity.ok(Map.of("mensaje", "Guía eliminada exitosamente", "key", key));
+    }
+
+    @GetMapping("/{bucket}/filtrar")
+    // @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<GuiaDto>> filtrarGuias(
+            @PathVariable String bucket,
+            @RequestParam String transportista,
+            @RequestParam String fecha,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        log.info("Filtrando guías - transportista: {}, fecha: {}", transportista, fecha);
+
+        List<GuiaDto> guias = awsS3Service.listarGuiasPorTransportistaYFecha(bucket, transportista, fecha)
+                .stream()
+                .map(obj -> GuiaDto.builder()
+                        .s3Key(obj.getKey())
+                        .size(obj.getSize())
+                        .lastModified(obj.getLastModified())
+                        .transportista(transportista)
+                        .fecha(fecha)
+                        .numeroGuia(extraerNumeroGuia(obj.getKey()))
+                        .build())
+                .toList();
+
+        return ResponseEntity.ok(guias);
+    }
+
+    @GetMapping("/{bucket}/objects")
+    // @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<S3ObjectDto>> listarObjetos(
+            @PathVariable String bucket,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        log.info("Listando objetos del bucket: {}", bucket);
+        return ResponseEntity.ok(awsS3Service.listObjects(bucket));
+    }
+
+    private String extraerNumeroGuia(String key) {
+        if (key == null) return "";
+        String[] parts = key.split("/");
+        String nombre = parts[parts.length - 1];
+        return nombre.endsWith(".pdf") ? nombre.substring(0, nombre.length() - 4) : nombre;
+    }
+}
