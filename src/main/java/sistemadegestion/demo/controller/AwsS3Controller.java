@@ -55,9 +55,6 @@ public class AwsS3Controller {
         String key = "pdf/" + request.getFecha() + "/" + request.getTransportista()
                 + "/" + request.getNumeroGuia() + ".pdf";
 
-        // ⚠️ EFS comentado temporalmente para pruebas sin EFS montado
-        // efsService.saveToEfs(key, pdfBytes);
-
         awsS3Service.uploadBytes(bucket, key, pdfBytes, "application/pdf");
 
         log.info("Guía N° {} generada y subida exitosamente. Key: {}", request.getNumeroGuia(), key);
@@ -85,8 +82,6 @@ public class AwsS3Controller {
         String key = "pdf/" + fecha + "/" + transportista + "/" + numeroGuia + ".pdf";
 
         try {
-            // ⚠️ EFS comentado temporalmente para pruebas sin EFS montado
-            // efsService.saveToEfs(key, file);
             awsS3Service.upload(bucket, key, file);
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
@@ -120,10 +115,4 @@ public class AwsS3Controller {
 
     @PutMapping("/{bucket}/object")
     // @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> modificarGuia(
-            @PathVariable String bucket,
-            @RequestParam String sourceKey,
-            @RequestParam String destKey,
-            @AuthenticationPrincipal Jwt jwt) {
-
-        log.info("Modificando
+    public ResponseEntity<Map<String, String>> modificarGuia
