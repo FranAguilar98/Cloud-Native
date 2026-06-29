@@ -1,4 +1,3 @@
-```java
 package sistemadegestion.demo.controller;
 
 import jakarta.validation.Valid;
@@ -31,7 +30,6 @@ public class AwsS3Controller {
     private final GuiaPdfService guiaPdfService;
 
     @PostMapping("/{bucket}/generar")
-    // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> generarYSubirGuia(
             @PathVariable String bucket,
             @Valid @RequestBody GuiaRequestDto request) {
@@ -49,12 +47,18 @@ public class AwsS3Controller {
                 request.getBultos()
         );
 
-        String key = "pdf/" + request.getFecha() + "/" + request.getTransportista()
-                + "/" + request.getNumeroGuia() + ".pdf";
+        String key = "pdf/" + request.getFecha() + "/" +
+                request.getTransportista() + "/" +
+                request.getNumeroGuia() + ".pdf";
 
         efsService.saveToEfs(key, pdfBytes);
 
-        awsS3Service.uploadBytes(bucket, key, pdfBytes, "application/pdf");
+        awsS3Service.uploadBytes(
+                bucket,
+                key,
+                pdfBytes,
+                "application/pdf"
+        );
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Map.of(
@@ -65,7 +69,6 @@ public class AwsS3Controller {
     }
 
     @PostMapping("/{bucket}/subir")
-    // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> subirGuia(
             @PathVariable String bucket,
             @RequestParam String transportista,
@@ -75,62 +78,100 @@ public class AwsS3Controller {
 
         log.info("Subiendo guía {}", numeroGuia);
 
-        String key = "pdf/" + fecha + "/" + transportista + "/" + numeroGuia + ".pdf";
+        String key = "pdf/" +
+                fecha +
+                "/" +
+                transportista +
+                "/" +
+                numeroGuia +
+                ".pdf";
 
         try {
+
             efsService.saveToEfs(key, file);
-            awsS3Service.upload(bucket, key, file);
+
+            awsS3Service.upload(
+                    bucket,
+                    key,
+                    file
+            );
 
         } catch (Exception e) {
 
-            return ResponseEntity.internalServerError()
-                    .body(Map.of(
-                            "error",
-                            "Error al subir la guía: " + e.getMessage()
-                    ));
+            return ResponseEntity
+                    .internalServerError()
+                    .body(
+                            Map.of(
+                                    "error",
+                                    "Error al subir la guía: "
+                                            + e.getMessage()
+                            )
+                    );
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of(
-                        "mensaje", "Guía subida exitosamente",
-                        "s3Key", key
-                ));
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(
+                        Map.of(
+                                "mensaje",
+                                "Guía subida exitosamente",
+                                "s3Key",
+                                key
+                        )
+                );
     }
 
     @GetMapping("/{bucket}/object")
-    // @PreAuthorize("hasAnyRole('DESCARGA', 'ADMIN')")
     public ResponseEntity<byte[]> descargarGuia(
             @PathVariable String bucket,
             @RequestParam String key) {
 
         log.info("Descargando {}", key);
 
-        byte[] fileBytes = awsS3Service.downloadAsBytes(bucket, key);
+        byte[] fileBytes =
+                awsS3Service.downloadAsBytes(
+                        bucket,
+                        key
+                );
 
         String filename =
                 key.contains("/")
-                        ? key.substring(key.lastIndexOf("/") + 1)
+                        ? key.substring(
+                                key.lastIndexOf("/") + 1
+                        )
                         : key;
 
-        return ResponseEntity.ok()
+        return ResponseEntity
+                .ok()
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + filename + "\""
+                        "attachment; filename=\"" +
+                                filename +
+                                "\""
                 )
-                .contentType(MediaType.APPLICATION_PDF)
+                .contentType(
+                        MediaType.APPLICATION_PDF
+                )
                 .body(fileBytes);
     }
 
     @PutMapping("/{bucket}/object")
-    // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> modificarGuia(
             @PathVariable String bucket,
             @RequestParam String sourceKey,
             @RequestParam String destKey) {
 
-        log.info("Moviendo {} -> {}", sourceKey, destKey);
+        log.info(
+                "Moviendo {} -> {}",
+                sourceKey,
+                destKey
+        );
 
-        awsS3Service.moveObject(bucket, sourceKey, destKey);
+        awsS3Service.moveObject(
+                bucket,
+                sourceKey,
+                destKey
+        );
 
         return ResponseEntity.ok(
                 Map.of(
@@ -143,14 +184,19 @@ public class AwsS3Controller {
     }
 
     @DeleteMapping("/{bucket}/object")
-    // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> eliminarGuia(
             @PathVariable String bucket,
             @RequestParam String key) {
 
-        log.info("Eliminando {}", key);
+        log.info(
+                "Eliminando {}",
+                key
+        );
 
-        awsS3Service.deleteObject(bucket, key);
+        awsS3Service.deleteObject(
+                bucket,
+                key
+        );
 
         return ResponseEntity.ok(
                 Map.of(
@@ -163,14 +209,13 @@ public class AwsS3Controller {
     }
 
     @GetMapping("/{bucket}/filtrar")
-    // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<GuiaDto>> filtrarGuias(
             @PathVariable String bucket,
             @RequestParam String transportista,
             @RequestParam String fecha) {
 
         log.info(
-                "Filtrando transportista={} fecha={}",
+                "Filtrando guías - transportista: {}, fecha: {}",
                 transportista,
                 fecha
         );
@@ -183,19 +228,30 @@ public class AwsS3Controller {
                                 fecha
                         )
                         .stream()
-                        .map(obj ->
-                                GuiaDto.builder()
-                                        .s3Key(obj.getKey())
-                                        .size(obj.getSize())
-                                        .lastModified(obj.getLastModified())
-                                        .transportista(transportista)
-                                        .fecha(fecha)
-                                        .numeroGuia(
-                                                extraerNumeroGuia(
+                        .map(
+                                obj ->
+                                        GuiaDto.builder()
+                                                .s3Key(
                                                         obj.getKey()
                                                 )
-                                        )
-                                        .build()
+                                                .size(
+                                                        obj.getSize()
+                                                )
+                                                .lastModified(
+                                                        obj.getLastModified()
+                                                )
+                                                .transportista(
+                                                        transportista
+                                                )
+                                                .fecha(
+                                                        fecha
+                                                )
+                                                .numeroGuia(
+                                                        extraerNumeroGuia(
+                                                                obj.getKey()
+                                                        )
+                                                )
+                                                .build()
                         )
                         .toList();
 
@@ -203,27 +259,36 @@ public class AwsS3Controller {
     }
 
     @GetMapping("/{bucket}/objects")
-    // @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<S3ObjectDto>> listarObjetos(
             @PathVariable String bucket) {
 
-        log.info("Listando bucket {}", bucket);
+        log.info(
+                "Listando bucket {}",
+                bucket
+        );
 
         return ResponseEntity.ok(
-                awsS3Service.listObjects(bucket)
+                awsS3Service.listObjects(
+                        bucket
+                )
         );
     }
 
-    private String extraerNumeroGuia(String key) {
+    private String extraerNumeroGuia(
+            String key
+    ) {
 
-        if (key == null)
+        if (key == null) {
             return "";
+        }
 
         String[] parts =
                 key.split("/");
 
         String nombre =
-                parts[parts.length - 1];
+                parts[
+                        parts.length - 1
+                ];
 
         return nombre.endsWith(".pdf")
                 ? nombre.substring(
@@ -233,4 +298,3 @@ public class AwsS3Controller {
                 : nombre;
     }
 }
-```
