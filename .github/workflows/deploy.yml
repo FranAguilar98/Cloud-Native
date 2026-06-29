@@ -39,13 +39,11 @@ jobs:
               -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
               -e AWS_SESSION_TOKEN=${{ secrets.AWS_SESSION_TOKEN }} \
               -e AWS_DEFAULT_REGION=us-east-1 \
+              -e AZURE_TENANT_NAME=demoCloudNative \
+              -e AZURE_USER_FLOW=B2C_1_acceso \
+              -e AZURE_CLIENT_ID=74519e45-234a-4bd0-808a-4227bd8e9252 \
               ${{ secrets.DOCKERHUB_USERNAME }}/ms-guias-despacho:latest
             echo "✅ Deploy completado"
-            
-            # ⚠️ DESCOMENTAR cuando Azure AD esté configurado:
-            # -e AZURE_TENANT_NAME=${{ secrets.AZURE_TENANT_NAME }} \
-            # -e AZURE_USER_FLOW=${{ secrets.AZURE_USER_FLOW }} \
-            # -e AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }} \
-            
+
             # ⚠️ DESCOMENTAR cuando EFS esté montado:
             # -v /mnt/efs:/app/efs \
